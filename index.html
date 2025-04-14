@@ -144,37 +144,35 @@
       background-color: #fdd835;
     }
 
-    /* Custom Alert */
-    .custom-alert {
+    #customAlert {
+      display: none;
       position: fixed;
-      top: 20px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: #00aa00; /* Yeşil arka plan */
-      border: 2px solid darkred; /* Koyu kırmızı çerçeve */
-      padding: 15px 30px;
-      border-radius: 12px;
-      color: #ffff66; /* Neon sarımsı yazı */
-      font-weight: bold;
-      display: none;
-      z-index: 999;
-      box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);
+      background-color: #28a745;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 3px solid #dc3545;
       text-align: center;
+      font-size: 16px;
     }
 
-    .custom-alert button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      background-color: darkred;
+    #customAlert button {
+      background-color: #dc3545;
       color: white;
       border: none;
       border-radius: 8px;
+      padding: 5px 10px;
       cursor: pointer;
+      font-weight: bold;
     }
 
-    .custom-alert button:hover {
-      background-color: #b30000;
+    #customAlert button:hover {
+      background-color: #c82333;
     }
+
   </style>
 </head>
 <body>
@@ -219,11 +217,11 @@
     <input type="file" id="musicInput" accept="audio/*" onchange="playMusicFromInput(event)" />
     <p id="musicName"></p>
     <button onclick="stopMusic()">Müziği Durdur</button>
+    <button onclick="resumeMusic()">Devam Ettir</button>
   </div>
 
-  <!-- Custom Alert -->
-  <div id="customAlert" class="custom-alert">
-    <p class="alert-text">Skor kaydedildi!</p>
+  <div id="customAlert">
+    <p>Skor kaydedildi!</p>
     <button onclick="kapatAlert()">Tamam</button>
   </div>
 
@@ -267,13 +265,11 @@
       skorlar.unshift(skor);
       if (skorlar.length > 10) skorlar = skorlar.slice(0, 10);
       localStorage.setItem('skorlar', JSON.stringify(skorlar));
-
-      // Custom alert göster
+      alert('Skor kaydedildi!');
       document.getElementById('customAlert').style.display = 'block';
     }
 
     function showPage(id) {
-      // Sayfa geçişlerini yaparken sadece aktif olanı göster
       document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
       document.getElementById(id).classList.add('active');
       if (id === 'skorlar') skorGuncelle();
@@ -284,11 +280,29 @@
       const container = document.getElementById('skorListesi');
       container.innerHTML = '';
       skorlar.forEach((skor, i) => {
-        const skorDiv = document.createElement('div');
-        skorDiv.textContent = `${i + 1}. ${skor}`;
-        container.appendChild(skorDiv);
+        const div = document.createElement('div');
+        div.className = 'skor-item';
+        div.innerHTML = `${i + 1}. ${skor} <button onclick="silSkor(${i})">Sil</button>`;
+        container.appendChild(div);
       });
     }
+
+    function silSkor(index) {
+      let skorlar = JSON.parse(localStorage.getItem('skorlar') || '[]');
+      skorlar.splice(index, 1);
+      localStorage.setItem('skorlar', JSON.stringify(skorlar));
+      skorGuncelle();
+    }
+
+    function saatGuncelle() {
+      const now = new Date();
+      document.getElementById('clock').innerText = now.toLocaleTimeString();
+    }
+
+    setInterval(saatGuncelle, 1000);
+    saatGuncelle();
+    updateDisplay();
+    showPage('kronometre');
 
     function toggleMusicSelection() {
       const musicContainer = document.getElementById('music');
@@ -300,7 +314,7 @@
       if (file) {
         musicPlayer.src = URL.createObjectURL(file);
         musicPlayer.play();
-        document.getElementById('musicName').innerText = file.name;
+        document.getElementById('musicName').innerText = `Şu anda çalıyor: ${file.name}`;
       }
     }
 
@@ -309,14 +323,15 @@
       musicPlayer.currentTime = 0;
     }
 
+    function resumeMusic() {
+      if (musicPlayer.paused) {
+        musicPlayer.play();
+      }
+    }
+
     function kapatAlert() {
       document.getElementById('customAlert').style.display = 'none';
     }
-
-    // Sayfa yüklenince ana sayfayı göster
-    window.onload = function() {
-      showPage('kronometre');
-    };
   </script>
 </body>
 </html>
